@@ -11,20 +11,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cursor_cloud_agents_testing/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('shows required validation errors on empty submit', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Login is required'), findsOneWidget);
+    expect(find.text('Password is required'), findsOneWidget);
+  });
+
+  testWidgets('shows validation errors for weak credentials', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'ab');
+    await tester.enterText(fields.at(1), 'weak');
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
+    await tester.pump();
+
+    expect(find.text('Login must be at least 3 characters'), findsOneWidget);
+    expect(find.text('Password must be at least 8 characters'), findsOneWidget);
+  });
+
+  testWidgets('submits successfully for valid credentials', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'test_user');
+    await tester.enterText(fields.at(1), 'StrongPass1');
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Login successful'), findsOneWidget);
+    expect(find.text('Login is required'), findsNothing);
+    expect(find.text('Password is required'), findsNothing);
   });
 }
