@@ -11,20 +11,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cursor_cloud_agents_testing/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('Login form validates input and button state', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    final emailField = find.byType(TextFormField).at(0);
+    final passwordField = find.byType(TextFormField).at(1);
+    final loginButton = find.widgetWithText(ElevatedButton, 'Login');
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    ElevatedButton button = tester.widget(loginButton);
+    expect(button.onPressed, isNull);
+
+    await tester.enterText(emailField, 'invalid-email');
+    await tester.enterText(passwordField, '12345');
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Enter a valid email address'), findsOneWidget);
+    expect(find.text('Password must be at least 8 characters'), findsOneWidget);
+    button = tester.widget(loginButton);
+    expect(button.onPressed, isNull);
+
+    await tester.enterText(emailField, 'user@example.com');
+    await tester.enterText(passwordField, 'strongPass123');
+    await tester.pump();
+
+    button = tester.widget(loginButton);
+    expect(button.onPressed, isNotNull);
+
+    await tester.tap(loginButton);
+    await tester.pump();
+
+    expect(find.text('Login successful'), findsOneWidget);
   });
 }
